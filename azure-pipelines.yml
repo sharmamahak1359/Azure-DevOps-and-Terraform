@@ -45,3 +45,39 @@ stages:
          resourceGroupName: 'msiacrg'
          containers: 'webapp'
          containerCommand: 'helloworldapp.web.dll'
+- stage: iac
+  jobs:
+      - deployment: iac 
+        continueOnError: false
+        environment: 'dev'
+        strategy:
+         runOnce:
+           deploy:
+             steps:
+               - checkout: self
+               - task: TerraformInstaller@0
+                 displayName: 'install'
+                 inputs:
+                   terraformVersion: '1.3.7'
+               - task: TerraformTaskV3@3
+                 displayName: 'init'
+                 inputs:
+                   provider: 'azurerm'
+                   command: 'init'
+                   backendServiceArm: 'azuresc'
+                   backendAzureRmResourceGroupName: 'msiacrg'
+                   backendAzureRmStorageAccountName: 'msiacstorageaccount'
+                   backendAzureRmContainerName: 'msiaccontainer'
+                   backendAzureRmKey: 'terraform.tfstate'
+               - task: TerraformTaskV3@3
+                 displayName: 'plan'
+                 inputs:
+                   provider: 'azurerm'
+                   command: 'plan'
+                   environmentServiceNameAzureRM: 'azuresc'
+               - task: TerraformTaskV3@3
+                 displayName: 'apply'
+                 inputs:
+                   provider: 'azurerm'
+                   command: 'apply'
+                   environmentServiceNameAzureRM: 'azuresc'
